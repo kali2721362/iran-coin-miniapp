@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#071a26"/>
+      <stop offset="0.55" stop-color="#071018"/>
+      <stop offset="1" stop-color="#06121b"/>
+    </linearGradient>
+
+    <radialGradient id="g1" cx="20%" cy="15%" r="60%">
+      <stop offset="0" stop-color="#22c55e" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#22c55e" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="g2" cx="85%" cy="25%" r="55%">
+      <stop offset="0" stop-color="#3b82f6" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="flagWave" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#239F40" stop-opacity="0.75"/>
+      <stop offset="0.5" stop-color="#f0f0f0" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#DA0000" stop-opacity="0.75"/>
+    </linearGradient>
+
+    <filter id="blur20" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <rect width="1080" height="1920" fill="url(#bg)"/>
+  <rect width="1080" height="1920" fill="url(#g1)"/>
+  <rect width="1080" height="1920" fill="url(#g2)"/>
+
+  <circle cx="140" cy="180" r="90" fill="#fff" opacity="0.06" filter="url(#blur20)"/>
+  <circle cx="930" cy="340" r="120" fill="#fff" opacity="0.05" filter="url(#blur20)"/>
+  <circle cx="780" cy="1200" r="160" fill="#fff" opacity="0.03" filter="url(#blur20)"/>
+
+  <path d="M-50 430 C 150 300, 320 520, 540 410 C 740 310, 880 520, 1130 390 L 1130 620 L -50 620 Z"
+        fill="url(#flagWave)" opacity="0.55" filter="url(#blur20)"/>
+  <path d="M-60 520 C 140 420, 340 610, 540 520 C 770 410, 920 660, 1140 520"
+        fill="none" stroke="#ffffff" stroke-opacity="0.10" stroke-width="10"/>
+
+  <g opacity="0.20" filter="url(#shadow)">
+    <path d="M820 650 L860 650 L850 840 L830 840 Z" fill="#0b2330"/>
+    <path d="M820 840 C825 880, 855 880, 860 840 L905 1240 L775 1240 Z" fill="#0b2330"/>
+    <path d="M815 640 C820 610, 860 610, 865 640 C850 660, 830 660, 815 640 Z" fill="#0b2330"/>
+  </g>
+
+  <circle cx="240" cy="620" r="230" fill="#f7b500" opacity="0.08" filter="url(#blur20)"/>
+</svg>
