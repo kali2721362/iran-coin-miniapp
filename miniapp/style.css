@@ -1,0 +1,469 @@
+'use strict';
+
+const CONFIG = {
+  API_URL: 'https://iran-coin-bot-production.up.railway.app/api/v1',
+  BOT_USERNAME: 'IranCoinEarnBot',
+  IRAN_TO_TON_RATE: 0.000002
+};
+
+const TG = window.Telegram?.WebApp;
+const state = { user: null, page: 'home', prev: null, energy: 1000, maxEnergy: 1000 };
+
+function money(n){
+  const x = Number(n || 0);
+  return x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function toast(msg, type='ok'){
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.style.cssText = `position:fixed; top:20px; left:50%; transform:translateX(-50%); background:${type==='ok'?'#10b981':'#ef4444'}; color:white; padding:10px 20px; border-radius:20px; font-weight:bold; z-index:999; font-size:13px;`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2200);
+}
+
+function qs(name){ return new URL(location.href).searchParams.get(name); }
+
+async function apiPost(path, body){
+  const r = await fetch(CONFIG.API_URL + path, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body || {})
+  });
+  return r.json();
+}
+async function apiGet(path){
+  const r = await fetch(CONFIG.API_URL + path);
+  return r.json();
+}
+
+async function init(){
+  if (TG){
+    TG.ready();
+    TG.expand();
+  }
+
+  const tgUser = TG?.initDataUnsafe?.user;
+  const ref = qs('ref') || null;
+
+  if (!tgUser){
+    state.user = { telegram_id: 111111, first_name: 'User', username: 'demo', balance: 1250 };
+    return;
+  }
+
+  const payload = {
+    initData: TG?.initData || '',
+    user: { id: tgUser.id, username: tgUser.username || '', first_name: tgUser.first_name || 'User' },
+    ref
+  };
+
+  try {
+    const res = await apiPost('/user/init', payload);
+    state.user = res?.user || { telegram_id: tgUser.id, balance: 0 };
+  } catch (e) {
+    state.user = { telegram_id: tgUser.id, balance: 0 };
+  }
+}
+
+function openApp(page){
+  document.getElementById('splash')?.classList.add('hidden');
+  document.getElementById('app')?.classList.remove('hidden');
+  navTo(page || 'home');
+}
+
+function setBackVisible(v){
+  const b = document.getElementById('backBtn');
+  if (b) b.classList.toggle('hidden', !v);
+}
+
+function navTo(page){
+  state.prev = state.page;
+  state.page = page;
+
+  document.querySelectorAll('.nav-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.page === page);
+  });
+
+  setBackVisible(page !== 'home');
+
+  const root = document.getElementById('page');
+  if (!root) return;
+  root.innerHTML = '';
+
+  if (page === 'home') renderHome(root);
+  else if (page === 'ads') renderAds(root);
+  else if (page === 'miner') renderMiner(root);
+  else if (page === 'tasks') renderTasks(root);
+  else if (page === 'wallet') renderWallet(root);
+  else if (page === 'withdraw') renderWithdraw(root);
+  else renderHome(root);
+}
+
+function goBack(){ navTo(state.prev || 'home'); }
+
+/* Home Page (دقیقاً مطابق عکس دوم) */
+function renderHome(root){
+  const u = state.user || {};
+  const ton = (Number(u.balance||0) * CONFIG.IRAN_TO_TON_RATE).toFixed(4);
+
+  root.innerHTML = `
+    <div class="card">
+      <div class="row">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <img src="https://flagcdn.com/w80/ir.png" style="width:32px; height:32px; border-radius:50%;" />
+          <div>
+            <div class="title">IRAN Coin</div>
+            <div class="sub">Together for a better future 🇮🇷</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="balance">
+        <div class="coin-sm"><img src="assets/iran-coin.svg" alt="coin" /></div>
+        <div class="btxt">
+          <div class="blabel">Your Balance</div>
+          <div class="bamount">${money(u.balance)} <span>IRAN</span></div>
+          <div class="bton">≈ ${ton} TON</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="tile" onclick="navTo('ads')">
+          <div class="tico">▶</div><div class="tname">Watch Ads</div><div class="tsub">+5-20 IRAN</div>
+        </div>
+        <div class="tile" onclick="navTo('tasks')">
+          <div class="tico">✓</div><div class="tname">Tasks</div><div class="tsub">+10-100 IRAN</div>
+        </div>
+        <div class="tile" onclick="shareReferral()">
+          <div class="tico">👥</div><div class="tname">Invite Friends</div><div class="tsub">+50 IRAN</div>
+        </div>
+        <div class="tile" onclick="claimStreak()">
+          <div class="tico">🎁</div><div class="tname">Daily Bonus</div><div class="tsub">+10 IRAN</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- بخش چرخونه شانس -->
+    <div class="card" style="text-align:center;">
+      <div class="title">🎡 گردونه شانس روزانه</div>
+      <div class="sub" style="margin-bottom:10px;">هر ۲۴ ساعت یک‌بار شانس خودت رو امتحان کن!</div>
+
+      <div style="position: relative; width: 200px; height: 220px; margin: 10px auto;">
+        <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 20px solid #ef4444; z-index: 10;"></div>
+        <canvas id="wheelCanvas" width="200" height="200" style="border-radius: 50%; transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1.2);"></canvas>
+      </div>
+
+      <button id="spinBtn" class="btn" onclick="spinWheel()" style="width:85%;">بچرخون! 🎰</button>
+      <div id="spinTimer" style="display:none; color:#f59e0b; margin-top:10px; font-weight:800; font-size:13px;"></div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    drawWheel();
+    loadUserData();
+  }, 50);
+}
+
+/* ماینر تب‌تب (Tap-Tap Miner) */
+function renderMiner(root){
+  const u = state.user || {};
+
+  root.innerHTML = `
+    <div class="card" style="text-align:center;">
+      <div class="title">⛏ Tap-Tap Miner</div>
+      <div class="sub">رو سکه کلیک کن و سکه بگیر!</div>
+
+      <div class="balance" style="justify-content:center; margin:15px 0;">
+        <div class="bamount" id="minerBal">${money(u.balance)} <span>IRAN</span></div>
+      </div>
+
+      <div class="tap-area">
+        <img id="tapCoin" src="assets/iran-coin.svg" class="tap-coin" onclick="handleTap(event)" />
+      </div>
+
+      <div style="margin-top:15px;">
+        <div class="row">
+          <span style="font-size:12px; color:#94a3b8;">⚡ انرژی</span>
+          <span style="font-size:12px; font-weight:bold;" id="energyText">${state.energy} / ${state.maxEnergy}</span>
+        </div>
+        <div class="energy-bar">
+          <div class="energy-fill" id="energyFill" style="width:${(state.energy/state.maxEnergy)*100}%;"></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function handleTap(e){
+  if (state.energy <= 0) {
+    toast("انرژی شما تمام شده است! کمی صبر کنید.", "err");
+    return;
+  }
+
+  state.energy -= 1;
+  state.user.balance += 1;
+
+  // آپدیت UI
+  const balEl = document.getElementById('minerBal');
+  if (balEl) balEl.innerHTML = `${money(state.user.balance)} <span>IRAN</span>`;
+  
+  const textEl = document.getElementById('energyText');
+  if (textEl) textEl.innerText = `${state.energy} / ${state.maxEnergy}`;
+
+  const fillEl = document.getElementById('energyFill');
+  if (fillEl) fillEl.style.width = `${(state.energy/state.maxEnergy)*100}%`;
+
+  // انیمیشن عدد شناور +1
+  const float = document.createElement('div');
+  float.className = 'floating-num';
+  float.innerText = '+1';
+  float.style.left = `${e.clientX - 15}px`;
+  float.style.top = `${e.clientY - 30}px`;
+  document.body.appendChild(float);
+  setTimeout(()=>float.remove(), 800);
+
+  if (TG) TG.HapticFeedback?.impactOccurred('light');
+}
+
+// بازیابی خودکار انرژی در هر ثانیه
+setInterval(() => {
+  if (state.energy < state.maxEnergy) {
+    state.energy = Math.min(state.maxEnergy, state.energy + 2);
+    const textEl = document.getElementById('energyText');
+    if (textEl) textEl.innerText = `${state.energy} / ${state.maxEnergy}`;
+    const fillEl = document.getElementById('energyFill');
+    if (fillEl) fillEl.style.width = `${(state.energy/state.maxEnergy)*100}%`;
+  }
+}, 1000);
+
+/* چرخونه شانس */
+const rewards = ["10", "20", "50", "100", "200", "500"];
+const colors = ["#f59e0b", "#3b82f6", "#10b981", "#8b5cf6", "#ec4899", "#ef4444"];
+let currentRotation = 0;
+
+function drawWheel() {
+    const canvas = document.getElementById("wheelCanvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const slices = rewards.length;
+    const sliceAngle = (2 * Math.PI) / slices;
+
+    ctx.clearRect(0, 0, 200, 200);
+
+    rewards.forEach((reward, i) => {
+        const angle = i * sliceAngle;
+        ctx.beginPath();
+        ctx.fillStyle = colors[i];
+        ctx.moveTo(100, 100);
+        ctx.arc(100, 100, 95, angle, angle + sliceAngle);
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#0f2230";
+        ctx.stroke();
+
+        ctx.save();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 12px Inter, sans-serif";
+        ctx.translate(100 + Math.cos(angle + sliceAngle / 2) * 65, 100 + Math.sin(angle + sliceAngle / 2) * 65);
+        ctx.rotate(angle + sliceAngle / 2 + Math.PI / 2);
+        ctx.fillText(reward, -ctx.measureText(reward).width / 2, 0);
+        ctx.restore();
+    });
+}
+
+async function spinWheel() {
+    const btn = document.getElementById("spinBtn");
+    if (btn) { btn.disabled = true; btn.style.opacity = "0.6"; }
+
+    const userId = state.user?.telegram_id || "111111";
+
+    try {
+        const res = await apiPost(`/spin/${userId}`, {});
+        if (!res.success && res.detail) {
+            toast(res.detail, "err");
+            if (btn) { btn.disabled = false; btn.style.opacity = "1"; }
+            return;
+        }
+
+        const sliceAngle = 360 / rewards.length;
+        const targetIndex = res.reward_index;
+        const stopAngle = 360 - (targetIndex * sliceAngle) - (sliceAngle / 2) - 90;
+        
+        currentRotation += (360 * 5) + (stopAngle - (currentRotation % 360));
+        
+        const canvas = document.getElementById("wheelCanvas");
+        if (canvas) canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+        setTimeout(() => {
+            toast(`🎉 +${res.reward_amount} سکه برنده شدید!`, "ok");
+            if (state.user) state.user.balance = res.new_balance;
+            navTo('home');
+        }, 4200);
+
+    } catch (err) {
+        toast("خطا در چرخاندن گردونه", "err");
+        if (btn) { btn.disabled = false; btn.style.opacity = "1"; }
+    }
+}
+
+/* سایر بخش‌ها (Ads, Tasks, Wallet, Withdraw) */
+const ADS_UI = [
+  {id:1, title:'Crypto News', sec:30, reward:'+15 IRAN'},
+  {id:2, title:'Iranian Culture', sec:45, reward:'+20 IRAN'},
+  {id:3, title:'Web3 Projects', sec:60, reward:'+25 IRAN'}
+];
+
+function renderAds(root){
+  root.innerHTML = `
+    <div class="card">
+      <div class="title">Watch Ads</div>
+      <div class="sub" style="margin-bottom:12px;">Watch ads and earn IRAN coins</div>
+      ${ADS_UI.map(a=>`
+        <div class="row" style="margin-bottom:10px; background:rgba(255,255,255,0.03); padding:10px; border-radius:12px;">
+          <div>
+            <div style="font-size:13px; font-weight:bold;">${a.title}</div>
+            <div style="font-size:11px; color:#10b981;">${a.reward} • ⏱ ${a.sec}s</div>
+          </div>
+          <button class="btn" onclick="watchAd(${a.id})">Watch</button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+async function watchAd(adId){
+  const res = await apiPost('/ads/watch', { telegram_id: state.user.telegram_id, ad_id: adId });
+  if (res?.success){
+    state.user.balance = res.new_balance;
+    toast(`+${res.reward} IRAN دریافت شد!`, 'ok');
+  }
+}
+
+function renderTasks(root){
+  root.innerHTML = `
+    <div class="card">
+      <div class="title">Tasks</div>
+      <div class="sub" style="margin-bottom:12px;">Complete tasks and earn IRAN</div>
+      <div id="taskBox">Loading...</div>
+    </div>
+  `;
+  loadTasks();
+}
+
+async function loadTasks(){
+  const box = document.getElementById('taskBox');
+  if (!box) return;
+  try {
+    const data = await apiGet(`/tasks/${state.user?.telegram_id || "111111"}`);
+    const tasks = data?.tasks || [];
+    box.innerHTML = tasks.map(t => `
+      <div class="row" style="margin-bottom:10px; background:rgba(255,255,255,0.03); padding:10px; border-radius:12px;">
+        <div>
+          <div style="font-size:13px; font-weight:bold;">${t.title}</div>
+          <div style="font-size:11px; color:#f59e0b;">+${t.reward} IRAN</div>
+        </div>
+        <button class="btn" id="btn-task-${t.id}" ${t.completed?'disabled style="background:#334155"':''} onclick="doTask(${t.id}, '${t.task_url}')">
+          ${t.completed?'Done':'Join'}
+        </button>
+      </div>
+    `).join('');
+  } catch(e) { box.innerText = "Error loading tasks."; }
+}
+
+async function doTask(taskId, url){
+  const btn = document.getElementById(`btn-task-${taskId}`);
+  if (btn && btn.innerText.trim() === "Join") {
+    if (url) window.open(url, '_blank');
+    btn.innerText = "Check";
+    btn.style.background = "#f59e0b";
+    return;
+  }
+  const res = await apiPost('/tasks/complete', { telegram_id: state.user.telegram_id, task_id: taskId });
+  if (res?.success) {
+    state.user.balance = res.new_balance;
+    toast(`🎉 +${res.reward} IRAN دریافت شد!`, 'ok');
+    loadTasks();
+  } else {
+    toast(res?.message || 'ابتدا عضو کانال/گروه شوید!', 'err');
+  }
+}
+
+function renderWallet(root){
+  const u = state.user || {};
+  root.innerHTML = `
+    <div class="card">
+      <div class="title">Wallet</div>
+      <div class="balance">
+        <div class="bamount">${money(u.balance)} <span>IRAN</span></div>
+      </div>
+      <button class="btn" style="width:100%; font-size:16px; padding:14px;" onclick="navTo('withdraw')">🚀 Withdraw</button>
+    </div>
+  `;
+}
+
+function renderWithdraw(root){
+  root.innerHTML = `
+    <div class="card">
+      <div class="title">Withdraw to TON Wallet</div>
+      <input id="tonAddr" style="width:100%; padding:12px; margin:10px 0; border-radius:10px; border:1px solid #334155; background:#071018; color:white;" placeholder="Enter TON address (UQ...)" />
+      <input id="wdAmount" type="number" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px; border:1px solid #334155; background:#071018; color:white;" placeholder="Min 10000 IRAN" />
+      <button class="btn" style="width:100%;" onclick="requestWithdraw()">Request Withdrawal</button>
+    </div>
+  `;
+}
+
+async function requestWithdraw(){
+  const addr = document.getElementById('tonAddr')?.value?.trim();
+  const amount = Number(document.getElementById('wdAmount')?.value || 0);
+
+  if (!addr) return toast('آدرس ولت را وارد کنید', 'err');
+  if (amount < 10000) return toast('حداقل برداشت ۱۰,۰۰۰ سکه است', 'err');
+
+  const res = await apiPost('/withdraw/request', { telegram_id: state.user.telegram_id, amount, ton_address: addr });
+  if (res?.success){
+    state.user.balance = res.new_balance;
+    toast('درخواست برداشت با موفقیت ثبت شد', 'ok');
+    navTo('wallet');
+  } else { toast(res?.message || 'خطا در برداشت', 'err'); }
+}
+
+async function loadUserData(){
+  try {
+    const res = await apiGet(`/user/stats/${state.user?.telegram_id || "111111"}`);
+    if (res) {
+      const refEl = document.getElementById("refCount");
+      if (refEl) refEl.innerText = res.referrals_count || 0;
+    }
+  } catch(e){}
+}
+
+async function claimStreak(){
+  const res = await apiPost(`/streak/claim/${state.user?.telegram_id || "111111"}`, {});
+  if (res?.success) {
+    toast(`🎉 +${res.reward} سکه دریافت شد!`, 'ok');
+    state.user.balance = res.new_balance;
+    navTo('home');
+  } else { toast(res?.message || 'پاداش امروز قبلاً دریافت شده', 'err'); }
+}
+
+function shareReferral(){
+  const link = `https://t.me/${CONFIG.BOT_USERNAME}?start=ref_${state.user?.telegram_id}`;
+  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("🚀 بیا توی IRAN Coin سکه جمع کن!")}`;
+  if (TG?.openTelegramLink) TG.openTelegramLink(shareUrl);
+  else window.open(shareUrl, '_blank');
+}
+
+window.openApp = openApp;
+window.navTo = navTo;
+window.goBack = goBack;
+window.watchAd = watchAd;
+window.doTask = doTask;
+window.requestWithdraw = requestWithdraw;
+window.spinWheel = spinWheel;
+window.shareReferral = shareReferral;
+window.claimStreak = claimStreak;
+window.handleTap = handleTap;
+
+window.addEventListener('DOMContentLoaded', async ()=>{ await init(); });
