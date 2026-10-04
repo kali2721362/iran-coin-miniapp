@@ -1,71 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="fa">
 <head>
-  <meta charset="UTF-8" />
-  <base href="/iran-coin-miniapp/">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>IRAN Coin Bot</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=300" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IRAN Coin</title>
+
+  <!-- Redirect to the real app (inside /miniapp/) -->
+  <meta http-equiv="refresh" content="0; url=miniapp/index.html" />
+  <script>
+    window.location.replace("miniapp/index.html");
+  </script>
 </head>
 <body>
-  <!-- صفحه اسپلش اولیه (مطابق عکس اول) -->
-  <section id="splash" class="splash">
-    <div>
-      <div class="hero-coin">
-        <img src="assets/iran-coin.svg" class="coin-img" alt="IRAN Coin" />
-      </div>
-      <div class="hero-title">IRAN COIN</div>
-      <div class="hero-sub">Earn • Play • Withdraw</div>
-    </div>
-
-    <div class="hero-card">
-      <div class="hero-welcome">Welcome to IRAN Coin!</div>
-      <div class="hero-text">
-        Watch ads, complete tasks, tap miner, and invite friends. Earn IRAN coins and withdraw to your wallet.
-      </div>
-
-      <div class="hero-actions">
-        <div class="mini-action" onclick="openApp('ads')">▶<span>Watch Ads</span></div>
-        <div class="mini-action" onclick="openApp('tasks')">✓<span>Tasks</span></div>
-        <div class="mini-action" onclick="openCPXOfferwall()">📋<span>Surveys</span></div>
-        <div class="mini-action" onclick="openApp('miner')">⛏<span>Miner</span></div>
-      </div>
-    </div>
-
-    <button class="start-btn" onclick="openApp('home')">🚀 Start</button>
-  </section>
-
-  <!-- اپلیکیشن اصلی -->
-  <section id="app" class="app hidden">
-    <header class="topbar">
-      <div class="top-left">
-        <button id="backBtn" class="back hidden" onclick="goBack()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">←</button>
-        <div class="brand">
-          <div class="brand-flag">
-            <img src="https://flagcdn.com/w80/ir.png" alt="Iran" />
-          </div>
-          <div>
-            <div class="brand-title">IRAN Coin Bot</div>
-            <div class="brand-sub">mini app</div>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <main id="page" class="page"></main>
-
-    <!-- منوی پایین (کاملاً مشابه عکس) -->
-    <nav class="nav">
-      <button class="nav-btn active" data-page="home" onclick="navTo('home')"><span class="i">🏠</span><span>Home</span></button>
-      <button class="nav-btn" data-page="ads" onclick="navTo('ads')"><span class="i">▶</span><span>Ads</span></button>
-      <button class="nav-btn" data-page="miner" onclick="navTo('miner')"><span class="i">⛏</span><span>Miner</span></button>
-      <button class="nav-btn" data-page="tasks" onclick="navTo('tasks')"><span class="i">✓</span><span>Tasks</span></button>
-      <button class="nav-btn" data-page="wallet" onclick="navTo('wallet')"><span class="i">👛</span><span>Wallet</span></button>
-    </nav>
-  </section>
-
-  <script src="app.js?v=300"></script>
+  اگر منتقل نشدی، اینجا کلیک کن:
+  <a href="miniapp/index.html">Open IRAN Coin Mini App</a>
 </body>
 </html>
