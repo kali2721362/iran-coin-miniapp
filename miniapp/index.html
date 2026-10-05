@@ -5,16 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>IRAN Coin Bot</title>
 
-  <!-- keep relative paths stable inside /miniapp/ -->
-  <base href="./" />
-
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
-  <!-- Cache-bust -->
+  <!-- cache bust -->
   <link rel="stylesheet" href="style.css?v=330" />
 </head>
-
 <body>
   <!-- صفحه اسپلش اولیه -->
   <section id="splash" class="splash">
@@ -64,7 +60,6 @@
 
     <main id="page" class="page"></main>
 
-    <!-- منوی پایین -->
     <nav class="nav">
       <button class="nav-btn active" data-page="home" onclick="navTo('home')"><span class="i">🏠</span><span>Home</span></button>
       <button class="nav-btn" data-page="ads" onclick="navTo('ads')"><span class="i">▶</span><span>Ads</span></button>
@@ -74,7 +69,7 @@
     </nav>
   </section>
 
-  <!-- Cache-bust + defer so DOM exists before JS runs -->
-  <script src="app.js?v=330" defer></script>
+  <!-- cache bust -->
+  <script src="app.js?v=330"></script>
 </body>
 </html>
