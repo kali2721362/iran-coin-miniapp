@@ -4,12 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>IRAN Coin Bot</title>
+
+  <!-- keep relative paths stable inside /miniapp/ -->
+  <base href="./" />
+
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+
+  <!-- Cache-bust -->
   <link rel="stylesheet" href="style.css?v=330" />
 </head>
+
 <body>
-  <!-- صفحه اسپلش اولیه (مطابق عکس اول) -->
+  <!-- صفحه اسپلش اولیه -->
   <section id="splash" class="splash">
     <div>
       <div class="hero-coin">
@@ -40,7 +47,9 @@
   <section id="app" class="app hidden">
     <header class="topbar">
       <div class="top-left">
-        <button id="backBtn" class="back hidden" onclick="goBack()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">←</button>
+        <button id="backBtn" class="back hidden" onclick="goBack()"
+          style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">←</button>
+
         <div class="brand">
           <div class="brand-flag">
             <img src="https://flagcdn.com/w80/ir.png" alt="Iran" />
@@ -55,7 +64,7 @@
 
     <main id="page" class="page"></main>
 
-    <!-- منوی پایین (کاملاً مشابه عکس) -->
+    <!-- منوی پایین -->
     <nav class="nav">
       <button class="nav-btn active" data-page="home" onclick="navTo('home')"><span class="i">🏠</span><span>Home</span></button>
       <button class="nav-btn" data-page="ads" onclick="navTo('ads')"><span class="i">▶</span><span>Ads</span></button>
@@ -65,6 +74,7 @@
     </nav>
   </section>
 
-  <script src="app.js?v=300"></script>
+  <!-- Cache-bust + defer so DOM exists before JS runs -->
+  <script src="app.js?v=330" defer></script>
 </body>
 </html>
