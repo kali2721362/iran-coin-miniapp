@@ -2,7 +2,7 @@ alert("APP.JS LOADED v301");
 'use strict';
 
 const CONFIG = {
-  API_URL: 'https://iran-coin-bot-production.up.railway.app/api/v1',
+  API_URL: "https://iran-coin-bot-production-222d.up.railway.app/api/v1',
   BOT_USERNAME: 'IranCoinEarnBot',
   IRAN_TO_TON_RATE: 0.000002
 };
