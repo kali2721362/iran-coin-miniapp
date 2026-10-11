@@ -1,4 +1,3 @@
-alert("APP.JS LOADED v301");
 'use strict';
 
 const CONFIG = {
