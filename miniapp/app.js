@@ -190,7 +190,7 @@ function renderHome(root) {
       </div>
 
       <div class="balance">
-        <div class="coin-sm"><img src="assets/iran-coin.svg" alt="coin" /></div>
+        <div class="coin-sm"><img src="assets/miner-new.png" alt="coin" /></div>
         <div class="btxt">
           <div class="blabel">Your Balance</div>
           <div class="bamount">${fmtCoins(u.balance)} <span>IRAN</span></div>
@@ -248,7 +248,7 @@ function renderMiner(root) {
       </div>
 
       <div class="tap-area">
-        <img id="tapCoin" src="assets/iran-coin.svg" class="tap-coin" onclick="handleTap(event)" />
+        <img id="tapCoin" src="assets/miner-new.png" class="tap-coin" onclick="handleTap(event)" />
       </div>
 
       <div style="margin-top:15px;">
