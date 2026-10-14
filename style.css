@@ -1,469 +1,323 @@
-'use strict';
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap');
 
-const CONFIG = {
-  API_URL: 'https://iran-coin-bot-production.up.railway.app/api/v1',
-  BOT_USERNAME: 'IranCoinEarnBot',
-  IRAN_TO_TON_RATE: 0.000002
-};
+:root{
+  --bg0:#070b14;
+  --bg1:#0b1224;
+  --card: rgba(18, 27, 46, .76);
+  --card2: rgba(255,255,255,.06);
+  --border: 1px solid rgba(255,255,255,.14);
 
-const TG = window.Telegram?.WebApp;
-const state = { user: null, page: 'home', prev: null, energy: 1000, maxEnergy: 1000 };
+  --text:#ffffff;
+  --muted:#a6b4cf;
 
-function money(n){
-  const x = Number(n || 0);
-  return x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  --gold:#f6c04a;
+  --blue:#39d2ff;
+  --green:#10b981;
+  --red:#ef4444;
+
+  --btn: linear-gradient(135deg,#f6c04a,#ff8c00);
+  --btn2: linear-gradient(135deg,#00d2ff,#3b82f6);
+
+  --r16:16px;
+  --r18:18px;
+  --r22:22px;
 }
 
-function toast(msg, type='ok'){
-  document.querySelectorAll('.toast').forEach(t=>t.remove());
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.style.cssText = `position:fixed; top:20px; left:50%; transform:translateX(-50%); background:${type==='ok'?'#10b981':'#ef4444'}; color:white; padding:10px 20px; border-radius:20px; font-weight:bold; z-index:999; font-size:13px;`;
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(()=>t.remove(), 2200);
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  -webkit-tap-highlight-color: transparent;
+  font-family:Poppins,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
 }
 
-function qs(name){ return new URL(location.href).searchParams.get(name); }
+html,body{height:100%}
 
-async function apiPost(path, body){
-  const r = await fetch(CONFIG.API_URL + path, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(body || {})
-  });
-  return r.json();
-}
-async function apiGet(path){
-  const r = await fetch(CONFIG.API_URL + path);
-  return r.json();
+body{
+  color:var(--text);
+  background:
+    radial-gradient(1200px 600px at 10% 0%, rgba(57,210,255,.18), transparent 50%),
+    radial-gradient(1000px 500px at 90% 10%, rgba(246,192,74,.16), transparent 55%),
+    linear-gradient(to bottom, rgba(7,11,20,.75), rgba(7,11,20,.92)),
+    url("bg-new.jpg") center/cover no-repeat fixed;
+  overflow-x:hidden;
+  padding-bottom: 94px;
 }
 
-async function init(){
-  if (TG){
-    TG.ready();
-    TG.expand();
-  }
+.hidden{display:none !important}
 
-  const tgUser = TG?.initDataUnsafe?.user;
-  const ref = qs('ref') || null;
-
-  if (!tgUser){
-    state.user = { telegram_id: 111111, first_name: 'User', username: 'demo', balance: 1250 };
-    return;
-  }
-
-  const payload = {
-    initData: TG?.initData || '',
-    user: { id: tgUser.id, username: tgUser.username || '', first_name: tgUser.first_name || 'User' },
-    ref
-  };
-
-  try {
-    const res = await apiPost('/user/init', payload);
-    state.user = res?.user || { telegram_id: tgUser.id, balance: 0 };
-  } catch (e) {
-    state.user = { telegram_id: tgUser.id, balance: 0 };
-  }
+/* ===== Toast ===== */
+.toast{
+  box-shadow: 0 16px 40px rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.14);
 }
 
-function openApp(page){
-  document.getElementById('splash')?.classList.add('hidden');
-  document.getElementById('app')?.classList.remove('hidden');
-  navTo(page || 'home');
+/* ===== Splash ===== */
+.splash{
+  min-height:100vh;
+  padding:20px 16px 110px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  text-align:center;
 }
 
-function setBackVisible(v){
-  const b = document.getElementById('backBtn');
-  if (b) b.classList.toggle('hidden', !v);
+.hero-coin{
+  width:104px;height:104px;border-radius:28px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.06);
+  border:var(--border);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 55px rgba(0,0,0,.38);
+  margin: 8px auto 10px;
+  position:relative;
+  overflow:hidden;
+}
+.hero-coin::before{
+  content:"";
+  position:absolute; inset:-40%;
+  background: conic-gradient(from 180deg, rgba(57,210,255,.0), rgba(57,210,255,.35), rgba(246,192,74,.35), rgba(57,210,255,.0));
+  animation: spinGlow 6s linear infinite;
+}
+@keyframes spinGlow{to{transform:rotate(360deg)}}
+.coin-img{width:76px;height:76px; position:relative; z-index:2; filter: drop-shadow(0 10px 22px rgba(0,0,0,.35));}
+
+.hero-title{
+  font-weight:950;
+  font-size:30px;
+  letter-spacing:.7px;
+  text-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+.hero-sub{
+  margin-top:6px;
+  color:var(--muted);
+  font-weight:800;
+  font-size:13px;
 }
 
-function navTo(page){
-  state.prev = state.page;
-  state.page = page;
-
-  document.querySelectorAll('.nav-btn').forEach(btn=>{
-    btn.classList.toggle('active', btn.dataset.page === page);
-  });
-
-  setBackVisible(page !== 'home');
-
-  const root = document.getElementById('page');
-  if (!root) return;
-  root.innerHTML = '';
-
-  if (page === 'home') renderHome(root);
-  else if (page === 'ads') renderAds(root);
-  else if (page === 'miner') renderMiner(root);
-  else if (page === 'tasks') renderTasks(root);
-  else if (page === 'wallet') renderWallet(root);
-  else if (page === 'withdraw') renderWithdraw(root);
-  else renderHome(root);
+.hero-card{
+  width:100%;
+  max-width:440px;
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--r22);
+  padding:16px;
+  box-shadow: 0 18px 60px rgba(0,0,0,.42);
+  backdrop-filter: blur(14px);
 }
 
-function goBack(){ navTo(state.prev || 'home'); }
+.hero-welcome{font-weight:950;font-size:16px;margin-bottom:8px}
+.hero-text{color:var(--muted);font-size:13px;line-height:1.6}
 
-/* Home Page (دقیقاً مطابق عکس دوم) */
-function renderHome(root){
-  const u = state.user || {};
-  const ton = (Number(u.balance||0) * CONFIG.IRAN_TO_TON_RATE).toFixed(4);
-
-  root.innerHTML = `
-    <div class="card">
-      <div class="row">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <img src="https://flagcdn.com/w80/ir.png" style="width:32px; height:32px; border-radius:50%;" />
-          <div>
-            <div class="title">IRAN Coin</div>
-            <div class="sub">Together for a better future 🇮🇷</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="balance">
-        <div class="coin-sm"><img src="assets/iran-coin.svg" alt="coin" /></div>
-        <div class="btxt">
-          <div class="blabel">Your Balance</div>
-          <div class="bamount">${money(u.balance)} <span>IRAN</span></div>
-          <div class="bton">≈ ${ton} TON</div>
-        </div>
-      </div>
-
-      <div class="grid">
-        <div class="tile" onclick="navTo('ads')">
-          <div class="tico">▶</div><div class="tname">Watch Ads</div><div class="tsub">+5-20 IRAN</div>
-        </div>
-        <div class="tile" onclick="navTo('tasks')">
-          <div class="tico">✓</div><div class="tname">Tasks</div><div class="tsub">+10-100 IRAN</div>
-        </div>
-        <div class="tile" onclick="shareReferral()">
-          <div class="tico">👥</div><div class="tname">Invite Friends</div><div class="tsub">+50 IRAN</div>
-        </div>
-        <div class="tile" onclick="claimStreak()">
-          <div class="tico">🎁</div><div class="tname">Daily Bonus</div><div class="tsub">+10 IRAN</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- بخش چرخونه شانس -->
-    <div class="card" style="text-align:center;">
-      <div class="title">🎡 گردونه شانس روزانه</div>
-      <div class="sub" style="margin-bottom:10px;">هر ۲۴ ساعت یک‌بار شانس خودت رو امتحان کن!</div>
-
-      <div style="position: relative; width: 200px; height: 220px; margin: 10px auto;">
-        <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 20px solid #ef4444; z-index: 10;"></div>
-        <canvas id="wheelCanvas" width="200" height="200" style="border-radius: 50%; transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1.2);"></canvas>
-      </div>
-
-      <button id="spinBtn" class="btn" onclick="spinWheel()" style="width:85%;">بچرخون! 🎰</button>
-      <div id="spinTimer" style="display:none; color:#f59e0b; margin-top:10px; font-weight:800; font-size:13px;"></div>
-    </div>
-  `;
-
-  setTimeout(() => {
-    drawWheel();
-    loadUserData();
-  }, 50);
+.hero-actions{
+  margin-top:14px;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
 }
 
-/* ماینر تب‌تب (Tap-Tap Miner) */
-function renderMiner(root){
-  const u = state.user || {};
+.mini-action{
+  cursor:pointer;
+  user-select:none;
+  background: rgba(255,255,255,.07);
+  border: var(--border);
+  border-radius: 16px;
+  padding:12px 10px;
+  font-weight:900;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition: transform .08s ease, background .15s ease;
+}
+.mini-action:hover{background: rgba(255,255,255,.10)}
+.mini-action:active{transform:scale(.985)}
 
-  root.innerHTML = `
-    <div class="card" style="text-align:center;">
-      <div class="title">⛏ Tap-Tap Miner</div>
-      <div class="sub">رو سکه کلیک کن و سکه بگیر!</div>
+.start-btn{
+  width:100%;
+  max-width:440px;
+  border:0;
+  border-radius: 18px;
+  padding:14px 14px;
+  font-weight:950;
+  font-size:15px;
+  color:#151515;
+  background: var(--btn);
+  box-shadow: 0 20px 45px rgba(246,192,74,.22);
+  cursor:pointer;
+  transition: transform .08s ease;
+}
+.start-btn:active{transform:scale(.99)}
 
-      <div class="balance" style="justify-content:center; margin:15px 0;">
-        <div class="bamount" id="minerBal">${money(u.balance)} <span>IRAN</span></div>
-      </div>
+/* ===== App ===== */
+.app{min-height:100vh}
 
-      <div class="tap-area">
-        <img id="tapCoin" src="assets/iran-coin.svg" class="tap-coin" onclick="handleTap(event)" />
-      </div>
-
-      <div style="margin-top:15px;">
-        <div class="row">
-          <span style="font-size:12px; color:#94a3b8;">⚡ انرژی</span>
-          <span style="font-size:12px; font-weight:bold;" id="energyText">${state.energy} / ${state.maxEnergy}</span>
-        </div>
-        <div class="energy-bar">
-          <div class="energy-fill" id="energyFill" style="width:${(state.energy/state.maxEnergy)*100}%;"></div>
-        </div>
-      </div>
-    </div>
-  `;
+/* topbar */
+.topbar{
+  position:sticky; top:0; z-index:50;
+  padding:12px 16px;
+  background: rgba(7,11,20,.68);
+  backdrop-filter: blur(16px);
+  border-bottom: var(--border);
+}
+.top-left{display:flex;align-items:center;gap:12px}
+.back{
+  width:42px;height:42px;border-radius:14px;
+  background: rgba(255,255,255,.07);
+  border: var(--border);
 }
 
-function handleTap(e){
-  if (state.energy <= 0) {
-    toast("انرژی شما تمام شده است! کمی صبر کنید.", "err");
-    return;
-  }
+.brand{display:flex;align-items:center;gap:10px}
+.brand-flag img{
+  width:38px;height:28px;border-radius:10px;
+  border: var(--border);
+  object-fit:cover;
+  box-shadow: 0 10px 25px rgba(0,0,0,.25);
+}
+.brand-title{font-weight:950;font-size:14px}
+.brand-sub{color:var(--muted);font-weight:850;font-size:12px}
 
-  state.energy -= 1;
-  state.user.balance += 1;
+.page{width:100%;max-width:480px;margin:0 auto;padding:16px}
 
-  // آپدیت UI
-  const balEl = document.getElementById('minerBal');
-  if (balEl) balEl.innerHTML = `${money(state.user.balance)} <span>IRAN</span>`;
-  
-  const textEl = document.getElementById('energyText');
-  if (textEl) textEl.innerText = `${state.energy} / ${state.maxEnergy}`;
-
-  const fillEl = document.getElementById('energyFill');
-  if (fillEl) fillEl.style.width = `${(state.energy/state.maxEnergy)*100}%`;
-
-  // انیمیشن عدد شناور +1
-  const float = document.createElement('div');
-  float.className = 'floating-num';
-  float.innerText = '+1';
-  float.style.left = `${e.clientX - 15}px`;
-  float.style.top = `${e.clientY - 30}px`;
-  document.body.appendChild(float);
-  setTimeout(()=>float.remove(), 800);
-
-  if (TG) TG.HapticFeedback?.impactOccurred('light');
+/* cards */
+.card{
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--r22);
+  padding:16px;
+  box-shadow: 0 18px 60px rgba(0,0,0,.42);
+  backdrop-filter: blur(14px);
+  margin-bottom:12px;
 }
 
-// بازیابی خودکار انرژی در هر ثانیه
-setInterval(() => {
-  if (state.energy < state.maxEnergy) {
-    state.energy = Math.min(state.maxEnergy, state.energy + 2);
-    const textEl = document.getElementById('energyText');
-    if (textEl) textEl.innerText = `${state.energy} / ${state.maxEnergy}`;
-    const fillEl = document.getElementById('energyFill');
-    if (fillEl) fillEl.style.width = `${(state.energy/state.maxEnergy)*100}%`;
-  }
-}, 1000);
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.title{font-weight:950;font-size:15px}
+.sub{color:var(--muted);font-weight:750;font-size:12px;line-height:1.55}
 
-/* چرخونه شانس */
-const rewards = ["10", "20", "50", "100", "200", "500"];
-const colors = ["#f59e0b", "#3b82f6", "#10b981", "#8b5cf6", "#ec4899", "#ef4444"];
-let currentRotation = 0;
+/* balance box */
+.balance{
+  margin-top:14px;
+  display:flex;align-items:center;gap:12px;
+  background: rgba(255,255,255,.06);
+  border: var(--border);
+  border-radius: 18px;
+  padding:12px;
+}
+.coin-sm{
+  width:48px;height:48px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  background: rgba(57,210,255,.12);
+  border: 1px solid rgba(57,210,255,.25);
+}
+.coin-sm img{width:32px;height:32px; filter: drop-shadow(0 10px 18px rgba(0,0,0,.25));}
+.blabel{color:var(--muted);font-weight:850;font-size:11px}
+.bamount{font-weight:950;font-size:20px;color:var(--gold)}
+.bamount span{font-size:12px;color:var(--muted);margin-left:6px}
+.bton{color:var(--blue);font-weight:950;font-size:12px;margin-top:4px}
 
-function drawWheel() {
-    const canvas = document.getElementById("wheelCanvas");
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const slices = rewards.length;
-    const sliceAngle = (2 * Math.PI) / slices;
+/* grid tiles */
+.grid{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+}
+.tile{
+  cursor:pointer;
+  background: rgba(255,255,255,.06);
+  border: var(--border);
+  border-radius: 18px;
+  padding:12px;
+  transition: transform .08s ease, background .15s ease;
+}
+.tile:hover{background: rgba(255,255,255,.09)}
+.tile:active{transform:scale(.99)}
+.tico{font-size:20px}
+.tname{font-weight:950;font-size:13px;margin-top:6px}
+.tsub{color:var(--muted);font-weight:850;font-size:11px;margin-top:4px}
 
-    ctx.clearRect(0, 0, 200, 200);
+/* buttons */
+.btn{
+  border:0;
+  border-radius: 16px;
+  padding:10px 12px;
+  font-weight:950;
+  background: var(--btn);
+  color:#151515;
+  cursor:pointer;
+  box-shadow: 0 14px 30px rgba(246,192,74,.18);
+}
+.btn:active{transform:scale(.99)}
+.btn:disabled{opacity:.55}
 
-    rewards.forEach((reward, i) => {
-        const angle = i * sliceAngle;
-        ctx.beginPath();
-        ctx.fillStyle = colors[i];
-        ctx.moveTo(100, 100);
-        ctx.arc(100, 100, 95, angle, angle + sliceAngle);
-        ctx.fill();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "#0f2230";
-        ctx.stroke();
+/* miner/tap */
+.tap-area{margin-top:14px;display:flex;justify-content:center}
+.tap-coin{
+  width:176px;height:176px;border-radius:50%;
+  background: rgba(255,255,255,.06);
+  border: var(--border);
+  padding:14px;
+  box-shadow: 0 22px 70px rgba(0,0,0,.45);
+  transition: transform .08s ease;
+}
+.tap-coin:active{transform:scale(.96)}
 
-        ctx.save();
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 12px Inter, sans-serif";
-        ctx.translate(100 + Math.cos(angle + sliceAngle / 2) * 65, 100 + Math.sin(angle + sliceAngle / 2) * 65);
-        ctx.rotate(angle + sliceAngle / 2 + Math.PI / 2);
-        ctx.fillText(reward, -ctx.measureText(reward).width / 2, 0);
-        ctx.restore();
-    });
+.energy-bar{
+  height:10px;width:100%;
+  background: rgba(255,255,255,.07);
+  border: var(--border);
+  border-radius:999px;
+  overflow:hidden;
+  margin-top:6px;
+}
+.energy-fill{height:100%;background: linear-gradient(90deg, var(--green), var(--blue))}
+
+.floating-num{
+  position:fixed;
+  color:var(--gold);
+  font-weight:950;
+  animation: floatUp .8s ease forwards;
+  z-index:9999;
+  text-shadow: 0 10px 24px rgba(0,0,0,.35);
+}
+@keyframes floatUp{
+  from{opacity:1; transform:translateY(0)}
+  to{opacity:0; transform:translateY(-42px)}
 }
 
-async function spinWheel() {
-    const btn = document.getElementById("spinBtn");
-    if (btn) { btn.disabled = true; btn.style.opacity = "0.6"; }
-
-    const userId = state.user?.telegram_id || "111111";
-
-    try {
-        const res = await apiPost(`/spin/${userId}`, {});
-        if (!res.success && res.detail) {
-            toast(res.detail, "err");
-            if (btn) { btn.disabled = false; btn.style.opacity = "1"; }
-            return;
-        }
-
-        const sliceAngle = 360 / rewards.length;
-        const targetIndex = res.reward_index;
-        const stopAngle = 360 - (targetIndex * sliceAngle) - (sliceAngle / 2) - 90;
-        
-        currentRotation += (360 * 5) + (stopAngle - (currentRotation % 360));
-        
-        const canvas = document.getElementById("wheelCanvas");
-        if (canvas) canvas.style.transform = `rotate(${currentRotation}deg)`;
-
-        setTimeout(() => {
-            toast(`🎉 +${res.reward_amount} سکه برنده شدید!`, "ok");
-            if (state.user) state.user.balance = res.new_balance;
-            navTo('home');
-        }, 4200);
-
-    } catch (err) {
-        toast("خطا در چرخاندن گردونه", "err");
-        if (btn) { btn.disabled = false; btn.style.opacity = "1"; }
-    }
+/* bottom nav */
+.nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:60;
+  padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(7,11,20,.72);
+  backdrop-filter: blur(18px);
+  border-top: var(--border);
+  display:flex;
+  gap:8px;
 }
-
-/* سایر بخش‌ها (Ads, Tasks, Wallet, Withdraw) */
-const ADS_UI = [
-  {id:1, title:'Crypto News', sec:30, reward:'+15 IRAN'},
-  {id:2, title:'Iranian Culture', sec:45, reward:'+20 IRAN'},
-  {id:3, title:'Web3 Projects', sec:60, reward:'+25 IRAN'}
-];
-
-function renderAds(root){
-  root.innerHTML = `
-    <div class="card">
-      <div class="title">Watch Ads</div>
-      <div class="sub" style="margin-bottom:12px;">Watch ads and earn IRAN coins</div>
-      ${ADS_UI.map(a=>`
-        <div class="row" style="margin-bottom:10px; background:rgba(255,255,255,0.03); padding:10px; border-radius:12px;">
-          <div>
-            <div style="font-size:13px; font-weight:bold;">${a.title}</div>
-            <div style="font-size:11px; color:#10b981;">${a.reward} • ⏱ ${a.sec}s</div>
-          </div>
-          <button class="btn" onclick="watchAd(${a.id})">Watch</button>
-        </div>
-      `).join('')}
-    </div>
-  `;
+.nav-btn{
+  flex:1;
+  border:0;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 16px;
+  padding:10px 6px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  font-weight:950;
+  font-size:11px;
+  cursor:pointer;
+  transition: background .15s ease, transform .08s ease;
 }
-
-async function watchAd(adId){
-  const res = await apiPost('/ads/watch', { telegram_id: state.user.telegram_id, ad_id: adId });
-  if (res?.success){
-    state.user.balance = res.new_balance;
-    toast(`+${res.reward} IRAN دریافت شد!`, 'ok');
-  }
+.nav-btn .i{font-size:20px;line-height:1}
+.nav-btn.active{
+  color: var(--text);
+  background: rgba(255,255,255,.08);
+  border: var(--border);
 }
-
-function renderTasks(root){
-  root.innerHTML = `
-    <div class="card">
-      <div class="title">Tasks</div>
-      <div class="sub" style="margin-bottom:12px;">Complete tasks and earn IRAN</div>
-      <div id="taskBox">Loading...</div>
-    </div>
-  `;
-  loadTasks();
-}
-
-async function loadTasks(){
-  const box = document.getElementById('taskBox');
-  if (!box) return;
-  try {
-    const data = await apiGet(`/tasks/${state.user?.telegram_id || "111111"}`);
-    const tasks = data?.tasks || [];
-    box.innerHTML = tasks.map(t => `
-      <div class="row" style="margin-bottom:10px; background:rgba(255,255,255,0.03); padding:10px; border-radius:12px;">
-        <div>
-          <div style="font-size:13px; font-weight:bold;">${t.title}</div>
-          <div style="font-size:11px; color:#f59e0b;">+${t.reward} IRAN</div>
-        </div>
-        <button class="btn" id="btn-task-${t.id}" ${t.completed?'disabled style="background:#334155"':''} onclick="doTask(${t.id}, '${t.task_url}')">
-          ${t.completed?'Done':'Join'}
-        </button>
-      </div>
-    `).join('');
-  } catch(e) { box.innerText = "Error loading tasks."; }
-}
-
-async function doTask(taskId, url){
-  const btn = document.getElementById(`btn-task-${taskId}`);
-  if (btn && btn.innerText.trim() === "Join") {
-    if (url) window.open(url, '_blank');
-    btn.innerText = "Check";
-    btn.style.background = "#f59e0b";
-    return;
-  }
-  const res = await apiPost('/tasks/complete', { telegram_id: state.user.telegram_id, task_id: taskId });
-  if (res?.success) {
-    state.user.balance = res.new_balance;
-    toast(`🎉 +${res.reward} IRAN دریافت شد!`, 'ok');
-    loadTasks();
-  } else {
-    toast(res?.message || 'ابتدا عضو کانال/گروه شوید!', 'err');
-  }
-}
-
-function renderWallet(root){
-  const u = state.user || {};
-  root.innerHTML = `
-    <div class="card">
-      <div class="title">Wallet</div>
-      <div class="balance">
-        <div class="bamount">${money(u.balance)} <span>IRAN</span></div>
-      </div>
-      <button class="btn" style="width:100%; font-size:16px; padding:14px;" onclick="navTo('withdraw')">🚀 Withdraw</button>
-    </div>
-  `;
-}
-
-function renderWithdraw(root){
-  root.innerHTML = `
-    <div class="card">
-      <div class="title">Withdraw to TON Wallet</div>
-      <input id="tonAddr" style="width:100%; padding:12px; margin:10px 0; border-radius:10px; border:1px solid #334155; background:#071018; color:white;" placeholder="Enter TON address (UQ...)" />
-      <input id="wdAmount" type="number" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px; border:1px solid #334155; background:#071018; color:white;" placeholder="Min 10000 IRAN" />
-      <button class="btn" style="width:100%;" onclick="requestWithdraw()">Request Withdrawal</button>
-    </div>
-  `;
-}
-
-async function requestWithdraw(){
-  const addr = document.getElementById('tonAddr')?.value?.trim();
-  const amount = Number(document.getElementById('wdAmount')?.value || 0);
-
-  if (!addr) return toast('آدرس ولت را وارد کنید', 'err');
-  if (amount < 10000) return toast('حداقل برداشت ۱۰,۰۰۰ سکه است', 'err');
-
-  const res = await apiPost('/withdraw/request', { telegram_id: state.user.telegram_id, amount, ton_address: addr });
-  if (res?.success){
-    state.user.balance = res.new_balance;
-    toast('درخواست برداشت با موفقیت ثبت شد', 'ok');
-    navTo('wallet');
-  } else { toast(res?.message || 'خطا در برداشت', 'err'); }
-}
-
-async function loadUserData(){
-  try {
-    const res = await apiGet(`/user/stats/${state.user?.telegram_id || "111111"}`);
-    if (res) {
-      const refEl = document.getElementById("refCount");
-      if (refEl) refEl.innerText = res.referrals_count || 0;
-    }
-  } catch(e){}
-}
-
-async function claimStreak(){
-  const res = await apiPost(`/streak/claim/${state.user?.telegram_id || "111111"}`, {});
-  if (res?.success) {
-    toast(`🎉 +${res.reward} سکه دریافت شد!`, 'ok');
-    state.user.balance = res.new_balance;
-    navTo('home');
-  } else { toast(res?.message || 'پاداش امروز قبلاً دریافت شده', 'err'); }
-}
-
-function shareReferral(){
-  const link = `https://t.me/${CONFIG.BOT_USERNAME}?start=ref_${state.user?.telegram_id}`;
-  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("🚀 بیا توی IRAN Coin سکه جمع کن!")}`;
-  if (TG?.openTelegramLink) TG.openTelegramLink(shareUrl);
-  else window.open(shareUrl, '_blank');
-}
-
-window.openApp = openApp;
-window.navTo = navTo;
-window.goBack = goBack;
-window.watchAd = watchAd;
-window.doTask = doTask;
-window.requestWithdraw = requestWithdraw;
-window.spinWheel = spinWheel;
-window.shareReferral = shareReferral;
-window.claimStreak = claimStreak;
-window.handleTap = handleTap;
-
-window.addEventListener('DOMContentLoaded', async ()=>{ await init(); });
+.nav-btn:active{transform:scale(.99)}
